@@ -19,7 +19,7 @@ data_directory = "data/"
 # annotation_file_template = "{}/{}/annotation{}.json"
 
 TRAIN_IMAGES_DIRECTORY = "data/train/images"
-
+TRAIN_MASKS_DIRECTORY = "data/train/masks"
 VAL_IMAGES_DIRECTORY = "data/train/images"
 
 class SaltDataset(Dataset):
@@ -46,11 +46,11 @@ class SaltDataset(Dataset):
         # img = self.coco.loadImgs(self.image_ids[idx])[0]
         # annotation_ids = self.coco.getAnnIds(imgIds=img['id'])
         # annotations = self.coco.loadAnns(annotation_ids)
-        img_file_name = self.file_names[idx]
-        mask_file_name = self.file_names[idx]
+        img_file_name = os.path.join(TRAIN_IMAGES_DIRECTORY, self.file_names[idx])
+        mask_file_name = os.path.join(TRAIN_MASKS_DIRECTORY, self.file_names[idx])
         pic = load_image(img_file_name, self.mode)
         mask = load_image(mask_file_name, 'mask')
-        pic, mask = self.transform(pic[0], mask[0])
+        pic, mask = self.transform(pic[0], mask)
         # plot_aug(pic, mask)
         if self.problem_type == 'binary' and self.mode == 'train':
             return to_float_tensor(pic),\
@@ -72,16 +72,18 @@ def to_float_tensor(img):
     return torch.from_numpy(np.moveaxis(img, -1, 0)).float()
 
 
-def load_image(img, mode):
+def load_image(image_path, mode):
     # if mode == 'valid':
     #     image_path = os.path.join(VAL_IMAGES_DIRECTORY, img["file_name"])
     # else:
-    image_path = os.path.join(TRAIN_IMAGES_DIRECTORY, img)
+    # image_path = os.path.join(TRAIN_IMAGES_DIRECTORY, img)
     if mode == 'mask':
         I = cv2.imread(image_path, 0)
+        I = pad(I, pad_size=32)
+        I = I[0]/255
     else:
         I = cv2.imread(image_path)
-    I = pad(I, pad_size=32)
+        I = pad(I, pad_size=32)
     # I1 = cv2.imread(image_path)
     # print(path_, img.shape)
     return I
