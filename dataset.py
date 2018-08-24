@@ -62,6 +62,8 @@ class SaltDataset(Dataset):
         if self.problem_type == 'binary' and self.mode == 'train':
             return to_float_tensor(pic),\
                    torch.from_numpy(np.expand_dims(mask, 0)).float()
+            # return torch.from_numpy(np.expand_dims(pic, 0)).float(), \
+            #        torch.from_numpy(np.expand_dims(mask, 0)).float()
         elif self.problem_type == 'binary' and self.mode == 'valid':
             return to_float_tensor(pic),\
                    torch.from_numpy(np.expand_dims(mask, 0)).float(), idx

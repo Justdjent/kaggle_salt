@@ -26,7 +26,7 @@ from tqdm import tqdm
 # from skimage import measure
 from torch import nn
 from torch.nn import functional as F
-
+from utils import mean_iou
 # writer = SummaryWriter()
 
 def validation_binary(model: nn.Module, criterion, valid_loader, epoch, num_classes=None):
@@ -53,14 +53,14 @@ def validation_binary(model: nn.Module, criterion, valid_loader, epoch, num_clas
         if not idx[0] % 10:
             save_valid_results(inputs, targets, outputs, idx[0], epoch)
         losses.append(loss.item())
-        jaccard += [get_jaccard(targets, (outputs > 0.5).float()).item()]
+        jaccard += [mean_iou(targets, (outputs > 0.5).float()).item()]
         # dice += [get_jaccard(targets, (outputs > 0).float()).item()]
 
     valid_loss = np.mean(losses)  # type: float
     # valid_rec = np.mean(recs)
     # valid_prec = np.mean(prec)
     valid_jaccard = np.mean(jaccard)
-    print('Valid loss: {:.5f}, jaccard: {:.5f}'.format(valid_loss, valid_jaccard))
+    print('Valid loss: {:.5f}, mean_iou: {:.5f}'.format(valid_loss, valid_jaccard))
     # print("Average Precision : {:.5f} || Average Recall : {:.5f}".format(valid_prec, valid_rec))
 
     metrics = {'valid_loss': valid_loss.astype(np.float64), 'jaccard_loss': valid_jaccard.astype(np.float64)}
@@ -77,6 +77,17 @@ def get_jaccard(y_true, y_pred):
 
     return (intersection / (union - intersection + epsilon)).mean()
 
+
+# def mean_iou(y_true, y_pred):
+#     prec = []
+#     for t in np.arange(0.5, 1.0, 0.05):
+#         y_pred_ = np.float32(y_pred > t)
+#         score = get_jaccard(y_true, y_pred_)
+#         # K.get_session().run(tf.local_variables_initializer())
+#         # with tf.control_dependencies([up_opt]):
+#         #     score = tf.identity(score)
+#         prec.append(score)
+#     return np.mean(prec)
 
 def validation_multi(model: nn.Module, criterion, valid_loader, num_classes):
     model.eval()

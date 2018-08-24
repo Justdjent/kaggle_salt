@@ -35,7 +35,7 @@ from transforms import (ImageOnly,
 img_transform = DualCompose([
     # RandomCrop([128, 128]),
     # Rescale([256, 256]),
-    ImageOnly(Normalize(mean=(0.471, 0.471, 0.471), std=(0.109, 0.109, 0.109)))
+    ImageOnly(Normalize(mean=(0), std=(1)))
 ])
 
 PAD = (13, 13, 14, 14)

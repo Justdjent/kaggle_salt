@@ -21,6 +21,17 @@ def get_jaccard(y_true, y_pred):
 
     return (intersection / (union - intersection + epsilon)).mean()
 
+def mean_iou(y_true, y_pred):
+    prec = []
+    for t in np.arange(0.5, 1.0, 0.05):
+        y_pred_ = (y_pred > t).float()
+        score = get_jaccard(y_true, y_pred_)
+        # K.get_session().run(tf.local_variables_initializer())
+        # with tf.control_dependencies([up_opt]):
+        #     score = tf.identity(score)
+        prec.append(score)
+    return np.mean(prec)
+
 def variable(x, volatile=False):
     if isinstance(x, (list, tuple)):
         return [variable(y, volatile=volatile) for y in x]
@@ -90,7 +101,7 @@ def train(args, model, criterion, train_loader, valid_loader, validation, init_o
                 inputs, targets = variable(inputs), variable(targets)
                 outputs = model(inputs)
                 loss = criterion(outputs, targets)
-                jaccard = get_jaccard(targets, (outputs > 0).float())
+                jaccard = mean_iou(targets, (outputs > 0).float())
                 optimizer.zero_grad()
                 batch_size = inputs.size(0)
                 loss.backward()
@@ -102,7 +113,7 @@ def train(args, model, criterion, train_loader, valid_loader, validation, init_o
                 mean_loss = np.mean(losses[-report_each:])
                 # print(jaccards)
                 mean_jaccard = np.mean(jaccards[-report_each:])
-                tq.set_postfix(loss='{:.5f}'.format(mean_loss), jaccard='{:.5f}'.format(mean_jaccard))
+                tq.set_postfix(loss='{:.5f}'.format(mean_loss), mean_iou='{:.5f}'.format(mean_jaccard))
                 if i and i % report_each == 0:
                     write_event(log, step, loss=mean_loss.astype(np.float64))
                     # writer.add_scalar('runs/tensorboard', mean_loss, step)
