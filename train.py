@@ -135,7 +135,7 @@ def main():
         RandomRotate90(),
         # RandomCrop([256, 256]),
         RandomFlip(prob=0.5),
-        Transpose(prob=0.5),
+        # Transpose(prob=0.5),
         # ImageOnly(RandomContrast(limit=0.2, prob=0.5)),
         # ImageOnly(RandomFilter(limit=0.5, prob=0.2)),
         # ImageOnly(RandomHueSaturationValue(prob=0.2)),

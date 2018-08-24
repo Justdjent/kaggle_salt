@@ -60,10 +60,10 @@ class SaltDataset(Dataset):
             pic, mask = self.transform(pic, mask)
         # plot_aug(pic, mask)
         if self.problem_type == 'binary' and self.mode == 'train':
-            return to_float_tensor(pic),\
-                   torch.from_numpy(np.expand_dims(mask, 0)).float()
-            # return torch.from_numpy(np.expand_dims(pic, 0)).float(), \
+            # return to_float_tensor(pic),\
             #        torch.from_numpy(np.expand_dims(mask, 0)).float()
+            return torch.from_numpy(np.expand_dims(pic, 0)).float(), \
+                   torch.from_numpy(np.expand_dims(mask, 0)).float()
         elif self.problem_type == 'binary' and self.mode == 'valid':
             return to_float_tensor(pic),\
                    torch.from_numpy(np.expand_dims(mask, 0)).float(), idx
@@ -90,11 +90,11 @@ def load_image(image_path, mode):
         I = pad(I, pad_size=32)
         I = I[0]/255
     else:
-        I = cv2.imread(image_path)
-        arr = np.linspace(0, 100, 101)
-        mesh = np.meshgrid(arr, arr)[0]
-        I[:,:,1] = mesh
-        I[:,:,2] = mesh.transpose(1, 0)
+        I = cv2.imread(image_path, 0)
+        # arr = np.linspace(0, 100, 101)
+        # mesh = np.meshgrid(arr, arr)[0]
+        # I[:,:,1] = mesh
+        # I[:,:,2] = mesh.transpose(1, 0)
         I = pad(I, pad_size=32)
         I = I[0]/255
     # I1 = cv2.imread(image_path)

@@ -316,7 +316,9 @@ class TernausNet34_dropout(nn.Module):
 
         self.relu = nn.ReLU(inplace=True)
 
-        self.conv1 = nn.Sequential(self.encoder.conv1,
+        self.conv1_1 = nn.Conv2d(1, 3, (1, 1), stride=1)
+        self.conv1 = nn.Sequential(self.conv1_1,
+                                   self.encoder.conv1,
                                    self.encoder.bn1,
                                    self.encoder.relu,
                                    self.pool)
