@@ -50,14 +50,14 @@ class SaltDataset(Dataset):
         if self.mode == 'predict':
             img_file_name = os.path.join(TEST_IMAGES_DIRECTORY, self.file_names[idx])
             pic = load_image(img_file_name, self.mode)
-            pic, _ = self.transform(pic[0], None)
+            pic, _ = self.transform(pic, None)
             # pic, _ = self.transform(pic[0], None)
         else:
             img_file_name = os.path.join(TRAIN_IMAGES_DIRECTORY, self.file_names[idx])
             mask_file_name = os.path.join(TRAIN_MASKS_DIRECTORY, self.file_names[idx])
             pic = load_image(img_file_name, self.mode)
             mask = load_image(mask_file_name, 'mask')
-            pic, mask = self.transform(pic[0], mask)
+            pic, mask = self.transform(pic, mask)
         # plot_aug(pic, mask)
         if self.problem_type == 'binary' and self.mode == 'train':
             return to_float_tensor(pic),\
@@ -91,7 +91,12 @@ def load_image(image_path, mode):
         I = I[0]/255
     else:
         I = cv2.imread(image_path)
+        arr = np.linspace(0, 100, 101)
+        mesh = np.meshgrid(arr, arr)[0]
+        I[:,:,1] = mesh
+        I[:,:,2] = mesh.transpose(1, 0)
         I = pad(I, pad_size=32)
+        I = I[0]/255
     # I1 = cv2.imread(image_path)
     # print(path_, img.shape)
     return I

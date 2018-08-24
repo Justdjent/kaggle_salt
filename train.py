@@ -132,16 +132,16 @@ def main():
         #         Distort1(distort_limit=0.05, shift_limit=0.05),
         #         Distort2(num_steps=1, distort_limit=0.05)]),
         #       ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.10, rotate_limit=45)), prob=0.5),
-        # RandomRotate90(),
+        RandomRotate90(),
         # RandomCrop([256, 256]),
-        # RandomFlip(prob=0.5),
-        # Transpose(prob=0.5),
+        RandomFlip(prob=0.5),
+        Transpose(prob=0.5),
         # ImageOnly(RandomContrast(limit=0.2, prob=0.5)),
         # ImageOnly(RandomFilter(limit=0.5, prob=0.2)),
         # ImageOnly(RandomHueSaturationValue(prob=0.2)),
         # ImageOnly(RandomBrightness()),
         # ImageOnly(Normalize(mean=(0.471, 0.471, 0.471), std=(0.109, 0.109, 0.109)))
-        ImageOnly(Normalize(mean=(0), std=(1)))
+        # ImageOnly(Normalize(mean=(0), std=(1)))
     ])
 
     val_transform = DualCompose([
