@@ -57,11 +57,11 @@ def main():
     arg('--device-ids', type=str, default='0', help='For example 0,1 to run on two GPUs')
     arg('--fold', type=int, help='fold', default=0)
     arg('--root', default='runs/debug', help='checkpoint root')
-    arg('--batch-size', type=int, default=8)
-    arg('--n-epochs', type=int, default=14)
-    arg('--lr', type=float, default=0.000001)
+    arg('--batch-size', type=int, default=4)
+    arg('--n-epochs', type=int, default=50)
+    arg('--lr', type=float, default=0.00001)
     arg('--workers', type=int, default=8)
-    arg('--type', type=str, default='binary', choices=['binary', 'parts', 'instruments'])
+    arg('--type', type=str, default='binary', choices=['binary'])
     arg('--model', type=str, default='TernausNet', choices=['UNet', 'UNet11', 'LinkNet34', 'TernausNet'])
 
     args = parser.parse_args()
@@ -138,13 +138,13 @@ def main():
         # ImageOnly(RandomFilter(limit=0.5, prob=0.2)),
         # ImageOnly(RandomHueSaturationValue(prob=0.2)),
         ImageOnly(RandomBrightness()),
-        ImageOnly(Normalize(mean=0.471, std=0.109))
+        ImageOnly(Normalize(mean=(0.471, 0.471, 0.471), std=(0.109, 0.109, 0.109)))
     ])
 
     val_transform = DualCompose([
         # RandomCrop([256, 256]),
         # Rescale([256, 256]),
-        ImageOnly(Normalize(mean=0.471, std=0.109))
+        ImageOnly(Normalize(mean=(0.471, 0.471, 0.471), std=(0.109, 0.109, 0.109)))
     ])
 
     train_loader = make_loader(train_images, shuffle=True, transform=train_transform, problem_type=args.type)

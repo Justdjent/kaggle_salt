@@ -1,14 +1,15 @@
-import numpy as np
+# import numpy as np
 import utils
-import json
-from pycocotools import mask
-from skimage import measure
-import random
+import torch
+# import json
+# from pycocotools import mask
+# from skimage import measure
+# import random
 import json
 import numpy as np
-import argparse
-import base64
-import glob
+# import argparse
+# import base64
+# import glob
 import os
 # import matplotlib.pyplot as plt
 
@@ -36,8 +37,11 @@ def validation_binary(model: nn.Module, criterion, valid_loader, epoch, num_clas
     jaccard = []
 
     for i, (inputs, targets, idx) in enumerate(valid_loader):
+        # with torch.no_grad():
         inputs = utils.variable(inputs, volatile=True)
         targets = utils.variable(targets)
+            # inputs = inputs
+            # targets = targets
         outputs = model(inputs)
         loss = criterion(outputs, targets)
         # prec, rec = calc_coco_metric(targets, outputs)
@@ -48,8 +52,9 @@ def validation_binary(model: nn.Module, criterion, valid_loader, epoch, num_clas
             # writer.add_image('Image', x, i)
         if not idx[0] % 10:
             save_valid_results(inputs, targets, outputs, idx[0], epoch)
-        losses.append(loss.data[0])
-        jaccard += [get_jaccard( targets, (outputs > 0).float()).data[0]]
+        losses.append(loss.item())
+        jaccard += [get_jaccard(targets, (outputs > 0.5).float()).item()]
+        # dice += [get_jaccard(targets, (outputs > 0).float()).item()]
 
     valid_loss = np.mean(losses)  # type: float
     # valid_rec = np.mean(recs)

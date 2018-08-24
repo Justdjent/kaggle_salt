@@ -2,17 +2,24 @@ import json
 from datetime import datetime
 from pathlib import Path
 import copy
-from tensorboardX import SummaryWriter
+# from tensorboardX import SummaryWriter
+# from validation import get_jaccard
 
 import random
 import numpy as np
 
 import torch
 from torch.autograd import Variable
-import torchvision.utils as vutils
+# import torchvision.utils as vutils
 import tqdm
+tqdm.monitor_interval = 0
 
+def get_jaccard(y_true, y_pred):
+    epsilon = 1e-15
+    intersection = (y_pred * y_true).sum(dim=-2).sum(dim=-1)
+    union = y_true.sum(dim=-2).sum(dim=-1) + y_pred.sum(dim=-2).sum(dim=-1)
 
+    return (intersection / (union - intersection + epsilon)).mean()
 
 def variable(x, volatile=False):
     if isinstance(x, (list, tuple)):
@@ -75,6 +82,7 @@ def train(args, model, criterion, train_loader, valid_loader, validation, init_o
         tq = tqdm.tqdm(total=(len(train_loader) * args.batch_size))
         tq.set_description('Epoch {}, lr {}'.format(epoch, lr))
         losses = []
+        jaccards = []
         tl = train_loader
         try:
             mean_loss = 0
@@ -82,7 +90,7 @@ def train(args, model, criterion, train_loader, valid_loader, validation, init_o
                 inputs, targets = variable(inputs), variable(targets)
                 outputs = model(inputs)
                 loss = criterion(outputs, targets)
-
+                jaccard = get_jaccard(targets, (outputs > 0).float())
                 optimizer.zero_grad()
                 batch_size = inputs.size(0)
                 loss.backward()
@@ -90,8 +98,11 @@ def train(args, model, criterion, train_loader, valid_loader, validation, init_o
                 step += 1
                 tq.update(batch_size)
                 losses.append(loss.data[0])
+                jaccards.append(jaccard.item())
                 mean_loss = np.mean(losses[-report_each:])
-                tq.set_postfix(loss='{:.5f}'.format(mean_loss))
+                # print(jaccards)
+                mean_jaccard = np.mean(jaccards[-report_each:])
+                tq.set_postfix(loss='{:.5f}'.format(mean_loss), jaccard='{:.5f}'.format(mean_jaccard))
                 if i and i % report_each == 0:
                     write_event(log, step, loss=mean_loss.astype(np.float64))
                     # writer.add_scalar('runs/tensorboard', mean_loss, step)
