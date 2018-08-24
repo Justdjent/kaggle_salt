@@ -97,7 +97,7 @@ def train(args, model, criterion, train_loader, valid_loader, validation, init_o
                 optimizer.step()
                 step += 1
                 tq.update(batch_size)
-                losses.append(loss.data[0])
+                losses.append(loss.item())
                 jaccards.append(jaccard.item())
                 mean_loss = np.mean(losses[-report_each:])
                 # print(jaccards)

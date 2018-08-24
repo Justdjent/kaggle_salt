@@ -1,17 +1,17 @@
 import torch
-import numpy as np
-import cv2
+# import numpy as np
+# import cv2
 from torch.utils.data import Dataset
 from pathlib import Path
-from pycocotools.coco import COCO
-from pycocotools import mask as cocomask
+# from pycocotools.coco import COCO
+# from pycocotools import mask as cocomask
 import cv2
 import numpy as np
 import skimage.io as io
-import matplotlib.pyplot as plt
-import pylab
-import random
-import prepare_data
+# import matplotlib.pyplot as plt
+# import pylab
+# import random
+# import prepare_data
 import os
 
 data_path = Path('data')
@@ -21,6 +21,7 @@ data_directory = "data/"
 TRAIN_IMAGES_DIRECTORY = "data/train/images"
 TRAIN_MASKS_DIRECTORY = "data/train/masks"
 VAL_IMAGES_DIRECTORY = "data/train/images"
+TEST_IMAGES_DIRECTORY = "data/test/images"
 
 class SaltDataset(Dataset):
     def __init__(self, file_names: str, to_augment=False, transform=None, mode='train', problem_type=None):
@@ -37,7 +38,7 @@ class SaltDataset(Dataset):
         # if self.mode == 'valid':
         return len(self.file_names)
         # else:
-        #     return 2
+        # return 2
 
     def __getitem__(self, idx):
         # print(self.file_names)
@@ -46,11 +47,17 @@ class SaltDataset(Dataset):
         # img = self.coco.loadImgs(self.image_ids[idx])[0]
         # annotation_ids = self.coco.getAnnIds(imgIds=img['id'])
         # annotations = self.coco.loadAnns(annotation_ids)
-        img_file_name = os.path.join(TRAIN_IMAGES_DIRECTORY, self.file_names[idx])
-        mask_file_name = os.path.join(TRAIN_MASKS_DIRECTORY, self.file_names[idx])
-        pic = load_image(img_file_name, self.mode)
-        mask = load_image(mask_file_name, 'mask')
-        pic, mask = self.transform(pic[0], mask)
+        if self.mode == 'predict':
+            img_file_name = os.path.join(TEST_IMAGES_DIRECTORY, self.file_names[idx])
+            pic = load_image(img_file_name, self.mode)
+            pic, _ = self.transform(pic[0], None)
+            # pic, _ = self.transform(pic[0], None)
+        else:
+            img_file_name = os.path.join(TRAIN_IMAGES_DIRECTORY, self.file_names[idx])
+            mask_file_name = os.path.join(TRAIN_MASKS_DIRECTORY, self.file_names[idx])
+            pic = load_image(img_file_name, self.mode)
+            mask = load_image(mask_file_name, 'mask')
+            pic, mask = self.transform(pic[0], mask)
         # plot_aug(pic, mask)
         if self.problem_type == 'binary' and self.mode == 'train':
             return to_float_tensor(pic),\
@@ -58,9 +65,8 @@ class SaltDataset(Dataset):
         elif self.problem_type == 'binary' and self.mode == 'valid':
             return to_float_tensor(pic),\
                    torch.from_numpy(np.expand_dims(mask, 0)).float(), idx
-        elif self.problem_type == 'binary' and self.mode == 'predict':
-            return to_float_tensor(pic),\
-                   torch.from_numpy(np.expand_dims(mask, 0)).float(), idx
+        elif self.mode == 'predict':
+            return to_float_tensor(pic), self.file_names[idx]
         else:
             # return to_float_tensor(img), torch.from_numpy(mask).long()
             return to_float_tensor(pic), to_float_tensor(mask)
@@ -201,13 +207,13 @@ def load_image_test(img):
     # print(path_, img.shape)
     return I
 
-def plot_aug(pic, mask):
-    fig = plt.figure(figsize=(8, 8))
-    fig.add_subplot(1, 2, 1)
-    plt.imshow(pic)
-    fig.add_subplot(1, 2, 2)
-    plt.imshow(mask)
-    # plt.imshow(pic)
-    # plt.imshow(mask)
-    plt.show()
+# def plot_aug(pic, mask):
+#     fig = plt.figure(figsize=(8, 8))
+#     fig.add_subplot(1, 2, 1)
+#     plt.imshow(pic)
+#     fig.add_subplot(1, 2, 2)
+#     plt.imshow(mask)
+#     # plt.imshow(pic)
+#     # plt.imshow(mask)
+#     plt.show()
 

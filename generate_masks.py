@@ -2,11 +2,12 @@
 Script generates predictions, splitting original images into tiles, and assembling prediction back together
 """
 import argparse
-import json
+# import json
 import os
-from prepare_train_val import get_split
-from dataset import MapDataset, MapDatasetTest
+# from prepare_train_val import get_split
+from dataset import SaltDataset, unpad
 import cv2
+import pandas as pd
 # from models import UNet16, LinkNet34, UNet11, UNet
 from unet_models import TernausNet34
 import torch
@@ -14,7 +15,7 @@ from pathlib import Path
 from tqdm import tqdm
 import numpy as np
 import utils
-import prepare_data
+# import prepare_data
 from torch.utils.data import DataLoader
 from torch.nn import functional as F
 # from prepare_data import (original_height,
@@ -22,7 +23,7 @@ from torch.nn import functional as F
 #                           h_start, w_start
 #                           )
 # from crop_utils import join_mask
-import crowdai
+# import crowdai
 
 from validation import convert_bin_coco
 from transforms import (ImageOnly,
@@ -33,10 +34,11 @@ from transforms import (ImageOnly,
 
 img_transform = DualCompose([
     # RandomCrop([128, 128]),
-    Rescale([256, 256]),
+    # Rescale([256, 256]),
     ImageOnly(Normalize())
 ])
 
+PAD = (13, 13, 14, 14)
 
 def get_model(model_path, model_type='unet11', problem_type='parts'):
     """
@@ -70,16 +72,53 @@ def get_model(model_path, model_type='unet11', problem_type='parts'):
 
     return model
 
+# Source https://www.kaggle.com/bguberfain/unet-with-depth
+def RLenc(img, order='F', format=True):
+    """
+    img is binary mask image, shape (r,c)
+    order is down-then-right, i.e. Fortran
+    format determines if the order needs to be preformatted (according to submission rules) or not
+
+    returns run length as an array or string (if format is True)
+    """
+    bytes = img.reshape(img.shape[0] * img.shape[1], order=order)
+    runs = []  ## list of run lengths
+    r = 0  ## the current run length
+    pos = 1  ## count starts from 1 per WK
+    for c in bytes:
+        if (c == 0):
+            if r != 0:
+                runs.append((pos, r))
+                pos += r
+                r = 0
+            pos += 1
+        else:
+            r += 1
+
+    # if last run is unsaved (i.e. data ends with 1)
+    if r != 0:
+        runs.append((pos, r))
+        pos += r
+        r = 0
+
+    if format:
+        z = ''
+
+        for rr in runs:
+            z += '{} {} '.format(rr[0], rr[1])
+        return z[:-1]
+    else:
+        return runs
 
 def predict(model, from_file_names, batch_size: int, to_path, problem_type):
     loader = DataLoader(
-        dataset=MapDatasetTest(from_file_names, transform=img_transform, mode='predict', problem_type=problem_type),
+        dataset=SaltDataset(from_file_names, transform=img_transform, mode='predict', problem_type=problem_type),
         shuffle=False,
         batch_size=batch_size,
         num_workers=args.workers,
         pin_memory=torch.cuda.is_available()
     )
-    anns = []
+    ss = pd.read_csv('data/sample_submission.csv')
     for batch_num, (inputs, paths) in enumerate(tqdm(loader, desc='Predict')):
         inputs = utils.variable(inputs, volatile=True)
 
@@ -110,33 +149,36 @@ def predict(model, from_file_names, batch_size: int, to_path, problem_type):
                 # full_mask = np.zeros((original_height, original_width))
                 # full_mask[h_start:h_start + h, w_start:w_start + w] = t_mask
 
-            full_mask = cv2.resize(t_mask, (300, 300), cv2.INTER_NEAREST)
+            true_mask = unpad(t_mask, PAD)
+            true_mask = true_mask > 0.5
+            true_mask = (true_mask * 255).astype(np.uint8)
             # instrument_folder = Path(paths[i]).parent.parent.name
 
             to_path.mkdir(exist_ok=True, parents=True)
             # print(image_name)
-            cv2.imwrite(str(to_path / image_name), (full_mask * 255).astype(np.uint8))
-            ann = convert_bin_coco(full_mask, image_name.split('.')[0])
-            anns.append(ann)
+            cv2.imwrite(str(to_path / image_name), true_mask)
+            # ann = convert_bin_coco(full_mask, image_name.split('.')[0])
+            # anns.append(ann)
+            ss.loc[ss.index[ss['id'] == image_name.split('.')[0]].tolist(), 'rle_mask'] = RLenc(true_mask)
 
+    ss.to_csv('data/submission.csv', index=False)
+    # fp = open("predictions.json", "w")
+    # fp.write(json.dumps(anns))
+    # fp.close()
 
-    fp = open("predictions.json", "w")
-    fp.write(json.dumps(anns))
-    fp.close()
-
-def submit():
-    api_key = "acbb79b92da3e408762784310464ec42"
-    challenge = crowdai.Challenge("crowdAIMappingChallenge", api_key)
-    result = challenge.submit("predictions.json")
-    print(result)
+# def submit():
+#     api_key = "acbb79b92da3e408762784310464ec42"
+#     challenge = crowdai.Challenge("crowdAIMappingChallenge", api_key)
+#     result = challenge.submit("predictions.json")
+#     print(result)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     arg = parser.add_argument
-    arg('--model_path', type=str, default='runs/debug', help='path to model folder')
+    arg('--model_path', type=str, default='model/baseline', help='path to model folder')
     arg('--model_type', type=str, default='UNet11', help='network architecture',
         choices=['UNet', 'UNet11', 'UNet16', 'LinkNet34'])
-    arg('--output_path', type=str, help='path to save images', default='output/val')
+    arg('--output_path', type=str, help='path to save images', default='data/test/masks')
     arg('--batch-size', type=int, default=1)
     arg('--fold', type=int, default=0, choices=[0, 1, 2, 3, -1], help='-1: all folds')
     arg('--problem_type', type=str, default='parts', choices=['binary', 'parts', 'instruments'])
@@ -161,7 +203,7 @@ if __name__ == '__main__':
             # submit()
     else:
         # file_names = os.listdir("../mapping-challenge-starter-kit/data/test_images")
-        file_names = os.listdir("../mapping-challenge-starter-kit/data/val/images")
+        file_names = os.listdir("data/test/images")
         # file_names = os.listdir('data/stage1_test')
         # _, file_names = get_split(args.fold)
         model = get_model(str(Path(args.model_path).joinpath('best_model_{fold}.pt'.format(fold=args.fold))),
@@ -177,3 +219,5 @@ if __name__ == '__main__':
         # imgs = os.listdir('data/stage1_test/')
         # [join_mask(128, img, 'output/mask/', 'output/joined_mask/', '0') for img in imgs]
         # utils.watershed()
+
+

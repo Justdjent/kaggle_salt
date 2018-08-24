@@ -11,7 +11,7 @@ import torch.backends.cudnn as cudnn
 import torch.backends.cudnn
 
 
-from unet_models import TernausNet34, UNet11, UNet16
+from unet_models import TernausNet34, UNet11, UNet16, TernausNet34_dropout
 from validation import validation_binary, validation_multi
 from loss import LossBinary, LossMulti
 from dataset import SaltDataset
@@ -77,9 +77,9 @@ def main():
         num_classes = 1
 
     if args.model == 'TernausNet':
-        model = TernausNet34(num_classes=num_classes)
+        model = TernausNet34_dropout(num_classes=num_classes)
     else:
-        model = TernausNet34(num_classes=num_classes)
+        model = TernausNet34_dropout(num_classes=num_classes)
 
     if torch.cuda.is_available():
         if args.device_ids:
