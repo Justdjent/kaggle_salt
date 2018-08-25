@@ -9,7 +9,7 @@ from dataset import SaltDataset, unpad
 import cv2
 import pandas as pd
 # from models import UNet16, LinkNet34, UNet11, UNet
-from unet_models import TernausNet34
+from unet_models import TernausNet34, UNet16
 import torch
 from pathlib import Path
 from tqdm import tqdm
@@ -50,14 +50,15 @@ def get_model(model_path, model_type='unet11', problem_type='parts'):
     """
     num_classes = 1
 
-    # if model_type == 'UNet16':
-    #     model = UNet16(num_classes=num_classes)
+    if model_type == 'UNet16':
+        model = UNet16(num_classes=num_classes)
     # elif model_type == 'UNet11':
     #     model = UNet11(num_classes=num_classes)
     # elif model_type == 'LinkNet34':
     #     model = LinkNet34(num_classes=num_classes)
     # elif model_type == 'UNet':
-    model = TernausNet34(num_classes=num_classes)
+    else:
+        model = TernausNet34(num_classes=num_classes)
     if torch.cuda.is_available():
         state = torch.load(str(model_path))
     else:
@@ -161,7 +162,7 @@ def predict(model, from_file_names, batch_size: int, to_path, problem_type):
             # anns.append(ann)
             ss.loc[ss.index[ss['id'] == image_name.split('.')[0]].tolist(), 'rle_mask'] = RLenc(true_mask)
 
-    ss.to_csv('data/submission.csv', index=False)
+    ss.to_csv('data/submission_1.csv', index=False)
     # fp = open("predictions.json", "w")
     # fp.write(json.dumps(anns))
     # fp.close()
@@ -175,8 +176,8 @@ def predict(model, from_file_names, batch_size: int, to_path, problem_type):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     arg = parser.add_argument
-    arg('--model_path', type=str, default='model/baseline', help='path to model folder')
-    arg('--model_type', type=str, default='UNet11', help='network architecture',
+    arg('--model_path', type=str, default='runs/debug/', help='path to model folder')
+    arg('--model_type', type=str, default='UNet16', help='network architecture',
         choices=['UNet', 'UNet11', 'UNet16', 'LinkNet34'])
     arg('--output_path', type=str, help='path to save images', default='data/test/masks')
     arg('--batch-size', type=int, default=1)

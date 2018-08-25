@@ -226,8 +226,10 @@ class UNet16(nn.Module):
         self.encoder = torchvision.models.vgg16(pretrained=pretrained).features
 
         self.relu = nn.ReLU(inplace=True)
+        self.conv1_1 = nn.Conv2d(1, 3, (1, 1), stride=1)
 
-        self.conv1 = nn.Sequential(self.encoder[0],
+        self.conv1 = nn.Sequential(self.conv1_1,
+                                   self.encoder[0],
                                    self.relu,
                                    self.encoder[2],
                                    self.relu)

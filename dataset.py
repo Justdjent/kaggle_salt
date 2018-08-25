@@ -65,10 +65,13 @@ class SaltDataset(Dataset):
             return torch.from_numpy(np.expand_dims(pic, 0)).float(), \
                    torch.from_numpy(np.expand_dims(mask, 0)).float()
         elif self.problem_type == 'binary' and self.mode == 'valid':
-            return to_float_tensor(pic),\
+            # return to_float_tensor(pic),\
+            #        torch.from_numpy(np.expand_dims(mask, 0)).float(), idx
+            return torch.from_numpy(np.expand_dims(pic, 0)).float(), \
                    torch.from_numpy(np.expand_dims(mask, 0)).float(), idx
         elif self.mode == 'predict':
-            return to_float_tensor(pic), self.file_names[idx]
+            # return to_float_tensor(pic), self.file_names[idx]
+            return torch.from_numpy(np.expand_dims(pic, 0)).float(), self.file_names[idx]
         else:
             # return to_float_tensor(img), torch.from_numpy(mask).long()
             return to_float_tensor(pic), to_float_tensor(mask)
