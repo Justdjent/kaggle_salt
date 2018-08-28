@@ -1,7 +1,7 @@
 import keras.backend as K
 from keras.backend.tensorflow_backend import _to_tensor
 from keras.losses import binary_crossentropy
-
+import numpy as np
 
 def dice_coef_clipped(y_true, y_pred, smooth=1.0):
     y_true_f = K.flatten(K.round(y_true))
@@ -107,6 +107,19 @@ def dice_coef_loss(y_true, y_pred):
 
 def dice_coef_loss_bce(y_true, y_pred, dice=0.5, bce=0.5, bootstrapping='hard', alpha=1.):
     return bootstrapped_crossentropy(y_true, y_pred, bootstrapping, alpha) * bce + dice_coef_loss(y_true, y_pred) * dice
+
+
+# Define IoU metric
+def mean_iou(y_true, y_pred):
+    prec = []
+    for t in np.arange(0.5, 1.0, 0.05):
+        y_pred_ = K.tf.to_int32(y_pred > t)
+        score, up_opt = K.tf.metrics.mean_iou(y_true, y_pred_, 2)
+        K.get_session().run(K.tf.local_variables_initializer())
+        with K.tf.control_dependencies([up_opt]):
+            score = K.tf.identity(score)
+        prec.append(score)
+    return K.mean(K.stack(prec), axis=0)
 
 
 def make_loss(loss_name):

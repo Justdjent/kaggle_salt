@@ -7,7 +7,7 @@ from keras.optimizers import Adam
 
 from CyclicLearningRate import CyclicLR
 from datasets import build_batch_generator, generate_filenames
-from losses import make_loss, dice_coef_clipped, dice_coef, dice_coef_border
+from losses import make_loss, dice_coef_clipped, dice_coef, dice_coef_border, mean_iou
 from models import make_model
 from params import args
 from utils import freeze_model, ThreadsafeIter
@@ -63,7 +63,7 @@ def main():
 
     model.compile(loss=make_loss(args.loss_function),
                   optimizer=optimizer,
-                  metrics=[dice_coef_border, dice_coef, binary_crossentropy, dice_coef_clipped])
+                  metrics=[dice_coef_border, dice_coef, binary_crossentropy, dice_coef_clipped, mean_iou])
 
     crop_size = None
 
