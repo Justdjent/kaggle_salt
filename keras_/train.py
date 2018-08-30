@@ -1,7 +1,7 @@
 import os
 
 import pandas as pd
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from keras.losses import binary_crossentropy
 from keras.optimizers import Adam
 
@@ -112,7 +112,7 @@ def main():
                                                   save_best_only=False,
                                                   save_weights_only=True)
 
-    callbacks = [best_model, EarlyStopping(patience=45, verbose=10)]
+    callbacks = [best_model, EarlyStopping(patience=45, verbose=10), TensorBoard(log_dir='./logs')]
     if args.clr is not None:
         clr_params = args.clr.split(',')
         base_lr = float(clr_params[0])
