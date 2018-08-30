@@ -155,7 +155,7 @@ def predict():
         print("Time spent: {:.2f}  seconds".format(time_spent))
         print("Speed: {:.2f}  ms per image".format(time_spent / (batch_size * (i + 1)) * 1000))
         print("Elapsed: {:.2f} hours  ".format(time_spent / (batch_size * (i + 1)) / 3600 * (nbr_test_samples - (batch_size * (i + 1)))))
-    ss.to_csv(args.submissions_dir + 'submission_1.csv', index=False)
+    ss.to_csv(args.submissions_dir + '/submission_1.csv', index=False)
 
 
 def predict_and_evaluate():

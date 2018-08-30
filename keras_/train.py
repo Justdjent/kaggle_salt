@@ -45,7 +45,7 @@ def main():
 
     best_model_file =\
         '{}/{}{}loss-{}-fold_{}-{}{:.6f}'.format(args.models_dir, args.network, formatted_net_alias, args.loss_function, args.fold, args.input_width, args.learning_rate) +\
-        '-{epoch:d}-{val_loss:0.7f}-{val_dice_coef:0.7f}-{val_dice_coef_clipped:0.7f}.h5'
+        '-{epoch:d}-{val_loss:0.7f}-{val_dice_coef:0.7f}-{val_mean_io:0.7f}-{val_dice_coef_clipped:0.7f}.h5'
 
     model = make_model((None, None, args.stacked_channels + 3))
     freeze_model(model, args.freeze_till_layer)

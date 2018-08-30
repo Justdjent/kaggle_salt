@@ -156,7 +156,7 @@ class ImageWithMaskFunction:
                                                                                    zoom_range=[0.9, 1.1],
                                                                                    channel_shift_range=0.1,
                                                                                    horizontal_flip=True,
-                                                                                   vertical_flip=True)
+                                                                                   vertical_flip=False)
         if self.crop_size:
             height = self.crop_size[0]
             width = self.crop_size[1]
