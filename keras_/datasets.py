@@ -2,6 +2,7 @@ import random
 
 import numpy as np
 import pandas as pd
+import cv2
 
 from keras.applications import imagenet_utils
 from keras.preprocessing.image import load_img, img_to_array
@@ -77,6 +78,8 @@ def build_batch_generator(filenames, img_dir=None, batch_size=None,
                     load_img(os.path.join(img_dir, filename), grayscale=False))
                 if img.shape[:2] != out_size:
                     img, mask_img = pad_img(img, None, out_size)
+                if args.edges:
+                    img = get_edges(img)
                 stacked_channels = []
                 for i in range(args.stacked_channels):
                     channel_path = os.path.join(args.stacked_channels_dir,
@@ -93,5 +96,24 @@ def build_batch_generator(filenames, img_dir=None, batch_size=None,
             if crop_size is None:
                 # @TODO: Remove hardcoded padding
                 batch_x, masks = pad(batch_x, 1, 0), pad(masks, 1, 0)
+            if args.edges:
+                yield batch_x, masks
+            else:
+                yield imagenet_utils.preprocess_input(batch_x, mode=args.preprocessing_function), masks
 
-            yield imagenet_utils.preprocess_input(batch_x, mode=args.preprocessing_function), masks
+
+def get_edges(image):
+    img = np.uint8(image[:,:,0])
+    out = np.zeros((args.img_height, args.img_width, 5))
+    laplacian = min_max(cv2.Laplacian(img, cv2.CV_64F))
+    sobelx = min_max(cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=5))
+    sobely = min_max(cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=5))
+    edges = min_max(cv2.Canny(img, 30, 200))
+    for n, c in zip(range(5), [image[:, :, 0]/255, laplacian, sobelx, sobely, edges]):
+        out[:, :, n] = c
+    return out
+
+def min_max(X):
+    X_std = (X - X.min()) / (X.max() - X.min())
+    X_scaled = X_std * (1 - 0) + 0
+    return X_scaled

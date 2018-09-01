@@ -34,7 +34,7 @@ def bootstrapped_crossentropy(y_true, y_pred, bootstrap_type='hard', alpha=0.95)
 
 
 def online_bootstrapping(y_true, y_pred, pixels=512, threshold=0.5):
-    """ Implements nline Bootstrapping crossentropy loss, to train only on hard pixels,
+    """ Implements Online Bootstrapping crossentropy loss, to train only on hard pixels,
         see  https://arxiv.org/abs/1605.06885 Bridging Category-level and Instance-level Semantic Image Segmentation
         The implementation is a bit different as we use binary crossentropy instead of softmax
         SUPPORTS ONLY MINIBATCH WITH 1 ELEMENT!

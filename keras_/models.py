@@ -32,6 +32,8 @@ Uses caffe preprocessing function
 
 
 def get_unet_resnet(input_shape):
+    # model.add(Convolution2D(64, 3, 3, activation='relu'))
+    resh_conv = Conv2D()
     resnet_base = ResNet50(input_shape=input_shape, include_top=False)
 
     if args.show_summary:
@@ -39,6 +41,7 @@ def get_unet_resnet(input_shape):
 
     for l in resnet_base.layers:
         l.trainable = True
+
     conv1 = resnet_base.get_layer("activation_1").output
     conv2 = resnet_base.get_layer("activation_10").output
     conv3 = resnet_base.get_layer("activation_22").output

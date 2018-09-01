@@ -29,6 +29,7 @@ arg('--show_summary', type=bool, default=False)
 arg('--network', default='simple_unet')
 arg('--net_alias', default='')
 arg('--preprocessing_function', default='caffe')
+arg('--edges', type=bool, default=False)
 
 arg('--pred_mask_dir')
 arg('--pred_tta')
